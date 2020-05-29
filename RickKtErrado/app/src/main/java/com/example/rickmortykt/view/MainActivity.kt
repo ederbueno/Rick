@@ -14,7 +14,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity() {
 
 
-    private var results: List<Result> = ArrayList()
+    private var results = mutableListOf<Result>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
 
         viewModelCharacter.getAllCharacters()
         viewModelCharacter.listCharacter.observe(this, Observer {
-            results = it
+            results.addAll(it)
             adapterCharacter.notifyDataSetChanged()
             }
         )
