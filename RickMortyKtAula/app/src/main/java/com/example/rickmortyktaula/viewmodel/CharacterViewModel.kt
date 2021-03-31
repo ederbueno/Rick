@@ -1,21 +1,13 @@
 package com.example.rickmortyktaula.viewmodel
 
-import androidx.lifecycle.*
-import androidx.paging.Pager
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
-import com.example.rickmortyktaula.model.Result
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import com.example.rickmortyktaula.modelMovies.Movie
-import com.example.rickmortyktaula.modelMovies.MovieConfiguration
+import com.example.rickmortyktaula.modelMovies.UpcomingMoviesPage
 import com.example.rickmortyktaula.repository.RepositoryRickMorty
 import com.example.rickmortyktaula.repository.SingletonConfiguration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.flattenMerge
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.net.UnknownHostException
@@ -24,6 +16,9 @@ class CharacterViewModel : ViewModel() {
 
     val moviesList = MutableLiveData<List<Movie>>()
     val errorMessage = MutableLiveData<String>()
+    val nextPageLoading by lazy { MutableLiveData<Boolean>() }
+    val firstPageLoading by lazy { MutableLiveData<Boolean>() }
+    var nextPage = 0
 
     private val repository = RepositoryRickMorty()
 
@@ -31,60 +26,53 @@ class CharacterViewModel : ViewModel() {
         getConfiguration()
     }
 
-//    fun getAllCharacters() = CoroutineScope(IO).launch {
-//        try {
-//            repository.getCharacterService().let { charactersResponse ->
-//                moviesList.postValue(charactersResponse.results)
-//            }
-//        }catch (error: Throwable){
-//            safeApi(error, errorMessage)
-//        }
-//    }
-
     fun getConfiguration() = CoroutineScope(IO).launch {
         try {
+            firstPageLoading.postValue(true)
             repository.getConfiguration().let { configuration ->
                 SingletonConfiguration.setConfiguration(configuration)
 
-//                getUpcomingMovies()
+                getUpcomingMovies()
             }
-        }catch (error: Throwable){
+        } catch (error: Throwable) {
             safeApi(error, errorMessage)
+        }finally {
+            firstPageLoading.postValue(false)
         }
     }
-
-    private val clearListCh = Channel<Unit>(Channel.CONFLATED)
-
-    val movies = flowOf(
-        clearListCh.receiveAsFlow().map { PagingData.empty() },
-        repository.getUpcomingMovies()
-            // cachedIn() shares the paging state across multiple consumers of posts,
-            // e.g. different generations of UI across rotation config change
-            .cachedIn(viewModelScope)
-    ).flattenMerge(2)
-//        liveData<PagingData<Movie>> {
-//        CoroutineScope(IO).launch {
-//            try {
-//                repository.getUpcomingMovies()
-//            }catch (error: Throwable){
-//                safeApi(error, errorMessage)
-//            }
-//        }
-//    }
 
     fun getUpcomingMovies() = CoroutineScope(IO).launch {
         try {
             repository.getUpcomingMovies().let { moviesPage ->
-                moviesPage
+                updateNextPage(moviesPage)
+                moviesList.postValue(moviesPage.movies.map { it.copy(title = "${it.title} pagina ${moviesPage.page}") })
             }
-        }catch (error: Throwable){
+        } catch (error: Throwable) {
             safeApi(error, errorMessage)
+        }
+    }
+
+    private fun updateNextPage(moviesPage: UpcomingMoviesPage) {
+        nextPage = moviesPage.page?.plus(1) ?: 0
+    }
+
+    fun requestNextPage() = CoroutineScope(IO).launch {
+        try {
+            nextPageLoading.postValue(true)
+            repository.getUpcomingMovies(nextPage).let { moviesPage ->
+                updateNextPage(moviesPage)
+                moviesList.postValue(moviesPage.movies.map { it.copy(title = "${it.title} pagina ${moviesPage.page}") })
+            }
+        } catch (error: Throwable) {
+            safeApi(error, errorMessage)
+        } finally {
+            nextPageLoading.postValue(false)
         }
     }
 }
 
-fun safeApi(error: Throwable, errorMessage:  MutableLiveData<String>){
-    when(error){
+fun safeApi(error: Throwable, errorMessage: MutableLiveData<String>) {
+    when (error) {
         is HttpException -> errorMessage.postValue("Erro de conexão código: ${error.code()}")
         is UnknownHostException -> errorMessage.postValue("Verifique sua conexão")
     }

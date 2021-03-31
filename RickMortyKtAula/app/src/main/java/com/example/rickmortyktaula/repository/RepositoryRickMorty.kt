@@ -1,13 +1,7 @@
 package com.example.rickmortyktaula.repository
 
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingSource
-import androidx.paging.liveData
-import com.example.rickmortyktaula.model.CharacterResponse
 import com.example.rickmortyktaula.network.EndPointApi
 import com.example.rickmortyktaula.network.RetrofitInit
-import com.example.rickmortyktaula.network.UpcommingMoviesPageSource
 
 
 class RepositoryRickMorty{
@@ -23,7 +17,5 @@ class RepositoryRickMorty{
 
     suspend fun getConfiguration() = serviceRick.getMoviesConfiguration()
 
-    fun getUpcomingMovies() = Pager(PagingConfig(pageSize = 20)){
-        UpcommingMoviesPageSource(url)
-    }.flow
+    suspend fun getUpcomingMovies(page: Int = 1) = serviceRick.getUpcomingMovies(page)
 }
