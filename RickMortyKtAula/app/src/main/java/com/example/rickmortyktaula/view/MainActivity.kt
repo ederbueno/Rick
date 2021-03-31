@@ -28,17 +28,6 @@ class MainActivity : AppCompatActivity() {
         //como se fosse fidby do viewModel
         val viewModelCharacter = ViewModelProviders.of(this).get(CharacterViewModel::class.java)
         //config recycler
-
-
-
-//        viewModelCharacter.moviesList.observe(this, Observer { movies ->
-//            val adapterCharacter = AdapterCharacter(movies ?: listOf(), this)
-//            recycler.adapter = adapterCharacter
-//            val layoutManager =
-//                GridLayoutManager(this, 2)
-//            recycler.layoutManager = layoutManager
-//        })
-
         adapter = AdapterCharacter()
             recycler.adapter = adapter
             val layoutManager =

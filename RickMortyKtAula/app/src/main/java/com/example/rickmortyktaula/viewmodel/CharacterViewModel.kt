@@ -30,23 +30,10 @@ class CharacterViewModel : ViewModel() {
     init {
         getConfiguration()
     }
-
-//    fun getAllCharacters() = CoroutineScope(IO).launch {
-//        try {
-//            repository.getCharacterService().let { charactersResponse ->
-//                moviesList.postValue(charactersResponse.results)
-//            }
-//        }catch (error: Throwable){
-//            safeApi(error, errorMessage)
-//        }
-//    }
-
     fun getConfiguration() = CoroutineScope(IO).launch {
         try {
             repository.getConfiguration().let { configuration ->
                 SingletonConfiguration.setConfiguration(configuration)
-
-//                getUpcomingMovies()
             }
         }catch (error: Throwable){
             safeApi(error, errorMessage)
@@ -62,25 +49,6 @@ class CharacterViewModel : ViewModel() {
             // e.g. different generations of UI across rotation config change
             .cachedIn(viewModelScope)
     ).flattenMerge(2)
-//        liveData<PagingData<Movie>> {
-//        CoroutineScope(IO).launch {
-//            try {
-//                repository.getUpcomingMovies()
-//            }catch (error: Throwable){
-//                safeApi(error, errorMessage)
-//            }
-//        }
-//    }
-
-    fun getUpcomingMovies() = CoroutineScope(IO).launch {
-        try {
-            repository.getUpcomingMovies().let { moviesPage ->
-                moviesPage
-            }
-        }catch (error: Throwable){
-            safeApi(error, errorMessage)
-        }
-    }
 }
 
 fun safeApi(error: Throwable, errorMessage:  MutableLiveData<String>){

@@ -17,10 +17,6 @@ class AdapterCharacter : PagingDataAdapter<Movie, ViewHolderCharacter>(MOVIE_COM
         return ViewHolderCharacter(view)
     }
 
-//    override fun getItemCount(): Int {
-//        return list.size
-//    }
-
     override fun onBindViewHolder(holder: ViewHolderCharacter, position: Int) {
         val movie = getItem(position)
         val configuration = SingletonConfiguration.config
