@@ -53,7 +53,7 @@ class CharacterViewModel : ViewModel() {
     }
 
     private fun updateNextPage(moviesPage: UpcomingMoviesPage) {
-        nextPage = moviesPage.page?.plus(1) ?: 0
+        nextPage = moviesPage.page?.plus(1) ?: 1
     }
 
     fun requestNextPage() = CoroutineScope(IO).launch {
